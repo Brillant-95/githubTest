@@ -1,0 +1,114 @@
+Climate Conference Project
+Database: https://www.db-fiddle.com/f/pxMci1sLL945KHKYvpe9W6/1
+
+--Find the name of Vips who gave feedback and their corresponding receivers
+select giver.first_name givers, rec.first_name receivers, giver.event, events.event_name
+from vips giver
+inner join vips rec
+on giver.provides_feedback_to=rec.member_id
+left join events
+on giver.event=events.event_id;
+
+-List all VIPs present for the various events
+select vips.first_name, vips.last_name, vips.event, events.event_name
+from vips
+left join events
+on vips.event=events.event_id;
+
+--List only the Vips present for various events
+select vips.first_name, vips.last_name, vips.event, events.event_name
+from vips
+inner join events
+on vips.event=events.event_id;
+
+--lists of vips and their corresponding hotels reserved
+select vips.first_name, vips.last_name,hotels.hotel_name
+from vips
+left join reservations
+on vips.member_id=reservations.member_id
+left join hotels
+on reservations.hotel=hotels.hotel_id;
+
+--list only vips who reserved for the welcome party
+select distinct vips.first_name, vips.last_name, reservations.hotel
+from vips
+inner join reservations
+on vips.member_id=reservations.member_id
+where reservations.welcome_rsvp=1
+and reservations.dinner_rsvp=0;
+
+--list only vips who reserved for both the welcome and dinner party
+select distinct vips.first_name, vips.last_name, reservations.hotel
+from vips
+inner join reservations
+on vips.member_id=reservations.member_id
+where reservations.welcome_rsvp=1
+and reservations.dinner_rsvp=1;
+
+--list vips who reserved only for the dinner party
+select distinct vips.first_name, vips.last_name, reservations.hotel
+from vips
+inner join reservations
+on vips.member_id=reservations.member_id
+where reservations.welcome_rsvp=0
+and reservations.dinner_rsvp=1;
+
+--name all vips from the research field and the corresponding events attended
+select vips.first_name, vips.last_name, event_name
+from vips
+inner join events
+on vips.event=events.event_id
+where vips.assoc_type like '%rese%';
+
+--name all the vips from the research association type who gave feedback to other vips. Name the receivers research_type
+select giver.first_name givers,giver.member_since giversRegYear,  giver.assoc_type GivAssoc, recs.first_name receivers, recs.assoc_type RecAssoc, recs.member_since recsRegYear
+from vips giver
+inner join vips recs
+on giver.provides_feedback_to=recs.member_id
+inner join reservations
+on giver.member_id= reservations.member_id
+where giver.assoc_type like '%res%';
+
+--Query with a Subquery: Find VIPs staying at the hotel with the most reservations.
+select vips.first_name, vips.last_name, hotels.hotel_name
+from vips
+inner join reservations
+on vips.member_id=reservations.member_id
+left join hotels
+on reservations.hotel=hotels.hotel_id
+where reservations.hotel=(select hotel from reservations group by hotel order by count(*) desc limit 1);
+
+--Query with a Subquery: Find VIPs staying at the hotel with the least reservations.
+select vips.first_name, vips.last_name, hotels.hotel_name
+from vips
+inner join reservations
+on vips.member_id=reservations.member_id
+left join hotels
+on reservations.hotel=hotels.hotel_id
+where reservations.hotel=(select hotel from reservations group by hotel order by count(*) limit 1);
+
+--Custom Query: Get a list of all government-affiliated VIPs who have RSVP’d for dinner.
+
+select vips.first_name, vips.last_name
+from vips
+inner join reservations 
+on vips.member_id=reservations.member_id
+where vips.assoc_type like "%gov%"
+and reservations.dinner_rsvp = 1;
+
+--Custom Query: Find the number of VIPs attending each event, ordered by event attendance.
+
+select count(member_id), events.event_name
+from vips
+inner join events
+on vips.event=events.event_id
+group by events.event_name
+order by count(member_id);
+
+--how many reservations did each hotel get order in ascending order?
+select count(hotel), hotels.hotel_name
+from reservations 
+inner join hotels
+on reservations.hotel=hotels.hotel_id
+group by hotels.hotel_name
+order by count(hotel);
